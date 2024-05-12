@@ -1,6 +1,6 @@
 from redbot.core import commands
 
-class lilArb6Mans(commands.Cog):
+class Arb6Mans(commands.Cog):
     """My custom cog"""
 
     def __init__(self, bot):
