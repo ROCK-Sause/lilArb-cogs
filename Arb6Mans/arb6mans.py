@@ -214,20 +214,25 @@ class Arb6Mans(commands.Cog, name="Queue Commands"):
         if ctx.channel.name == "4mans_queue":
             lobby = f'4Mans Lobby {lobby_num}'
             lobby_VC = f'4Mans {lobby_num}'
+            max_vc = 4
+            user_vc = 2
         if ctx.channel.name == "6mans_queue":
             lobby = f'6Mans Lobby {lobby_num}'
             lobby_VC = f'6Mans {lobby_num}'
+            max_vc = 6
+            user_vc = 3
         category_channel = await server.create_category_channel(lobby)
 
         lobby_embed = discord.Embed(title=f'New Lobby has been created', type="rich", color=discord.Color.green())
         lobby_embed.add_field(name=f'Please join {lobby}', value=f"Have fun and don't suck", inline=True)
         await ctx.send(embed=lobby_embed)
-        await category_channel.create_voice_channel(lobby_VC, user_limit=6)
-        await category_channel.create_voice_channel("Blue Team", user_limit=3)
-        await category_channel.create_voice_channel("Orange Team", user_limit=3)
+        await category_channel.create_voice_channel(lobby_VC, user_limit=max_vc)
+        await category_channel.create_voice_channel("Blue Team", user_limit=user_vc)
+        await category_channel.create_voice_channel("Orange Team", user_limit=user_vc)
 
     async def random_teams(self, ctx, players, max_players):
-        self.team_one = random.sample(players, max_players/2)
+        team_limit = int(max_players/2)
+        self.team_one = random.sample(players, team_limit)
         for player in self.team_one:
             players.remove(player)
         self.team_two = players
