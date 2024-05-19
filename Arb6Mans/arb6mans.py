@@ -1,9 +1,11 @@
 import discord
+import csv
 from redbot.core import commands
 import random
 
 MAX_QUEUE_6MANS = 6
 MAX_QUEUE_4MANS = 4
+filename = 'PlayerData.csv'
 
 class Arb6Mans(commands.Cog, name="Queue Commands"):
     """My custom cog"""
