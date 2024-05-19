@@ -5,7 +5,9 @@ import random
 
 MAX_QUEUE_6MANS = 6
 MAX_QUEUE_4MANS = 4
-filename = 'PlayerData.csv'
+filename_6man = 'PlayerData_6man.csv'
+filename_4man 'PlayerData_4man.csv'
+active_lobbies = []
 
 class Arb6Mans(commands.Cog, name="Queue Commands"):
     """My custom cog"""
@@ -211,7 +213,9 @@ class Arb6Mans(commands.Cog, name="Queue Commands"):
     @staticmethod
     async def create_lobby(ctx):
         server = ctx.guild
-        lobby_num = str(random.randint(1, 1000))
+        lobby_num = str(random.randint(1, 1000)) 
+        active_lobbies.append(lobby_num)                         
+        #there is a 1/1000 chance there is the same lobby number and I will deal with it later
         ctx.channel.name
         if ctx.channel.name == "4mans_queue":
             lobby = f'4Mans Lobby {lobby_num}'
@@ -245,3 +249,42 @@ class Arb6Mans(commands.Cog, name="Queue Commands"):
         teams_embed.add_field(name="**Orange Team**", value=f'{" ".join(player.name for player in self.team_two)}',
                               inline=False)
         await ctx.send(embed=teams_embed)
+
+    @commands.command(name="report", description="Reports lobby as a win or loss, deletes lobby from active lobbies, adjustes elo of players, deletes lobby.")
+    def report_lobby(command, self, active_lobbies, member: discord.Member):
+                 # Check if the command starts with ".report"
+        if not command.startswith(".report"):
+            return "Invalid command format. Please use !report <lobby number> <result>."
+    
+        # Split the command into parts
+        parts = command.split()
+        
+        # Ensure the command has exactly 3 parts
+        if len(parts) != 3:
+            return "Invalid command format. Please use .report <lobby number> <result>."
+        
+        # Extract the lobby number and result
+        _, lobby_number, result = parts
+        
+        # Validate the lobby number (should be a digit)
+        if not lobby_number.isdigit():
+            return "Invalid lobby number. It should be a numeric value."
+
+        #Validate lobby number is an active lobby
+        if not lobby_num in active_lobbies:
+            return "Lobby number is not active. Please confirm the lobby number is correct."
+
+        #remove lobby number from active_lobbies
+        lobby_number = int(lobby_number)
+        active_lobbies.remove(lobby_number)
+        
+        # Validate the result and store the value (should be 'w' for win)
+        if result.lower() == 'w':
+            is_winner = True
+        elif result.lower() == 'l':
+            is_winner = False
+        else:
+            return "Invalid result. Only 'w' for win or 'l' for loss is accepted."
+        
+        # Process the win report for the lobby
+
