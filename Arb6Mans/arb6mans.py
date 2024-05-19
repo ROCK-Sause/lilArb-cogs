@@ -5,9 +5,9 @@ import random
 
 MAX_QUEUE_6MANS = 6
 MAX_QUEUE_4MANS = 4
-filename_6man = 'PlayerData_6man.csv'
 filename_4man 'PlayerData_4man.csv'
-active_lobbies = []
+filename_6man = 'PlayerData_6man.csv' 
+active_lobbies = [] #used to check if lobby is valid
 
 class Arb6Mans(commands.Cog, name="Queue Commands"):
     """My custom cog"""
@@ -252,9 +252,9 @@ class Arb6Mans(commands.Cog, name="Queue Commands"):
 
     @commands.command(name="report", description="Reports lobby as a win or loss, deletes lobby from active lobbies, adjustes elo of players, deletes lobby.")
     def report_lobby(command, self, active_lobbies, member: discord.Member):
-                 # Check if the command starts with ".report"
+        # Check if the command starts with ".report"
         if not command.startswith(".report"):
-            return "Invalid command format. Please use !report <lobby number> <result>."
+            return "Invalid command format. Please use .report <lobby number> <result>."
     
         # Split the command into parts
         parts = command.split()
@@ -286,5 +286,88 @@ class Arb6Mans(commands.Cog, name="Queue Commands"):
         else:
             return "Invalid result. Only 'w' for win or 'l' for loss is accepted."
         
-        # Process the win report for the lobby
-
+        #Validate players are in correct database and add player and assign elo if necessary
+        if ctx.channel.name == "6mans_queue":
+            filename = filename_6mans
+        if ctx.channel.name == "4mans_queue":
+            filename = filename_4mans 
+        update_players_in_csv(filename, team_one, team_two)
+        #Determine author
+        player = ctx.author
+        #Determine what team is author on and did they win
+        if player in team_one
+            if is_winner
+                winning_team = team_one
+            else
+                winning_team = team_two
+        elif player in team_two
+            if is_winner
+                winning_team = team_two
+            else
+                winning_team = team_one
+        else
+            return "Player reporting not found on either team."
+        #modify elo values appropiately 
+        update_elo_after_match(filename, team_one, team_two, winning_team)
+        
+    def update_players_in_csv(filename, team_one, team_two):
+    # Read existing players from the CSV file
+    existing_players = {}
+    with open(filename, mode='r', newline='') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            existing_players[row['Player Name']] = row['ELO']
+    
+    # Combine team_one and team_two
+    all_players = team_one + team_two
+    
+    # Check and add missing players
+    new_entries = []
+    for player in all_players:
+        if player not in existing_players:
+            # Assign a default ELO value (1500) for new players
+            new_entries.append({"Player Name": player, "ELO": 1500})
+    
+    # Write back to the CSV file
+    with open(filename, mode='a', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=["Player Name", "ELO"])
+        
+        # If the file is empty, write the header
+        if file.tell() == 0:
+            writer.writeheader()
+        
+        # Write new entries
+        writer.writerows(new_entries)
+        
+    def update_elo_after_match(filename, team_one, team_two, winning_team):
+    # Read the current ELO ratings
+    players_elo = {}
+    if os.path.exists(filename):
+        with open(filename, mode='r', newline='') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                players_elo[row['Player Name']] = int(row['ELO'])
+    
+    # Update ELO ratings based on match result
+    if winning_team == "team_one":
+        for player in team_one:
+            if player in players_elo:
+                players_elo[player] += 10
+        for player in team_two:
+            if player in players_elo:
+                players_elo[player] -= 10
+    elif winning_team == "team_two":
+        for player in team_one:
+            if player in players_elo:
+                players_elo[player] -= 10
+        for player in team_two:
+            if player in players_elo:
+                players_elo[player] += 10
+    
+    # Write the updated ELO ratings back to the CSV file
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=["Player Name", "ELO"])
+        writer.writeheader()
+        for player, elo in players_elo.items():
+            writer.writerow({"Player Name": player, "ELO": elo})
+            
