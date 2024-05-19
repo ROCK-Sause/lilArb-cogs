@@ -311,58 +311,58 @@ class Arb6Mans(commands.Cog, name="Queue Commands"):
         update_elo_after_match(filename, team_one, team_two, winning_team)
         
     def update_players_in_csv(filename, team_one, team_two):
-    # Read existing players from the CSV file
-    existing_players = {}
-    with open(filename, mode='r', newline='') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            existing_players[row['Player Name']] = row['ELO']
-    
-    # Combine team_one and team_two
-    all_players = team_one + team_two
-    
-    # Check and add missing players
-    new_entries = []
-    for player in all_players:
-        if player not in existing_players:
-            # Assign a default ELO value (1500) for new players
-            new_entries.append({"Player Name": player, "ELO": 1500})
-    
-    # Write back to the CSV file
-    with open(filename, mode='a', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=["Player Name", "ELO"])
-        
-        # If the file is empty, write the header
-        if file.tell() == 0:
-            writer.writeheader()
-        
-        # Write new entries
-        writer.writerows(new_entries)
-        
-    def update_elo_after_match(filename, team_one, team_two, winning_team):
-    # Read the current ELO ratings
-    players_elo = {}
-    if os.path.exists(filename):
+        # Read existing players from the CSV file
+        existing_players = {}
         with open(filename, mode='r', newline='') as file:
             reader = csv.DictReader(file)
             for row in reader:
-                players_elo[row['Player Name']] = int(row['ELO'])
-    
-    # Update ELO ratings based on match result
-    if winning_team == "team_one":
-        for player in team_one:
-            if player in players_elo:
-                players_elo[player] += 10
-        for player in team_two:
-            if player in players_elo:
-                players_elo[player] -= 10
-    elif winning_team == "team_two":
-        for player in team_one:
-            if player in players_elo:
-                players_elo[player] -= 10
-        for player in team_two:
-            if player in players_elo:
-                players_elo[player] += 10
+                existing_players[row['Player Name']] = row['ELO']
+        
+        # Combine team_one and team_two
+        all_players = team_one + team_two
+        
+        # Check and add missing players
+        new_entries = []
+        for player in all_players:
+            if player not in existing_players:
+                # Assign a default ELO value (1500) for new players
+                new_entries.append({"Player Name": player, "ELO": 1500})
+        
+        # Write back to the CSV file
+        with open(filename, mode='a', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=["Player Name", "ELO"])
+            
+            # If the file is empty, write the header
+            if file.tell() == 0:
+                writer.writeheader()
+            
+            # Write new entries
+            writer.writerows(new_entries)
+        
+    def update_elo_after_match(filename, team_one, team_two, winning_team):
+        # Read the current ELO ratings
+        players_elo = {}
+        if os.path.exists(filename):
+            with open(filename, mode='r', newline='') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    players_elo[row['Player Name']] = int(row['ELO'])
+        
+        # Update ELO ratings based on match result
+        if winning_team == "team_one":
+            for player in team_one:
+                if player in players_elo:
+                    players_elo[player] += 10
+            for player in team_two:
+                if player in players_elo:
+                    players_elo[player] -= 10
+        elif winning_team == "team_two":
+            for player in team_one:
+                if player in players_elo:
+                    players_elo[player] -= 10
+            for player in team_two:
+                if player in players_elo:
+                    players_elo[player] += 10
     
     # Write the updated ELO ratings back to the CSV file
     with open(filename, mode='w', newline='') as file:
@@ -370,4 +370,39 @@ class Arb6Mans(commands.Cog, name="Queue Commands"):
         writer.writeheader()
         for player, elo in players_elo.items():
             writer.writerow({"Player Name": player, "ELO": elo})
-            
+
+    @commands.command(name='rank-check', description='Allows a user check elo of any user.')
+    def get_player_elo(filename, player_name):
+        if ctx.channel.name == "6mans_queue":
+            filename = filename_6mans
+        if ctx.channel.name == "4mans_queue":
+            filename = filename_4mans
+        if os.path.exists(filename):
+            with open(filename, mode='r', newline='') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    if row['Player Name'] == player_name:
+                         print(f"{player_name}'s ELO is {row['ELO']}")
+                        return
+        print(f"{player_name} is not found in the leaderboards.")
+
+    @commands.command(name='leaderboard', description='Allows a user to show top 10 players on leaderboard.')
+    def get_top_10_players(filename):
+        if ctx.channel.name == "6mans_queue":
+            filename = filename_6mans
+        if ctx.channel.name == "4mans_queue":
+            filename = filename_4mans
+        players_elo = []
+        if os.path.exists(filename):
+            with open(filename, mode='r', newline='') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    players_elo.append({"Player Name": row['Player Name'], "ELO": int(row['ELO'])})
+        
+        # Sort the players by ELO in descending order and get the top 10
+        top_10_players = sorted(players_elo, key=lambda x: x['ELO'], reverse=True)[:10]
+        # Print the top 10 players
+        print("Top 10 Players by ELO:")
+        for player in top_10_players:
+            print(f"{player['Player Name']}: {player['ELO']}")
+
